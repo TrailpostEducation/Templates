@@ -1,0 +1,394 @@
+import { useState, useRef } from "react";
+
+const THEMES = {
+  sunshine: { name: "Sunshine", emoji: "☀️", primary: "#F59E0B", secondary: "#EC4899", tertiary: "#8B5CF6", bg: "#FFFBEB", card: "#FFFFFF", text: "#1F1F1F", muted: "#9CA3AF", border: "#FDE68A", pattern: "radial-gradient(circle at 20px 20px, #FDE68A33 2px, transparent 2px)", patternSize: "40px 40px", headerBg: "linear-gradient(135deg, #F59E0B, #FBBF24, #F59E0B)", accent1: "#FEF3C7", accent2: "#FDE68A" },
+  ocean: { name: "Ocean Breeze", emoji: "🐚", primary: "#0EA5E9", secondary: "#06B6D4", tertiary: "#8B5CF6", bg: "#F0F9FF", card: "#FFFFFF", text: "#1E293B", muted: "#94A3B8", border: "#BAE6FD", pattern: "radial-gradient(circle at 15px 15px, #BAE6FD44 3px, transparent 3px)", patternSize: "30px 30px", headerBg: "linear-gradient(135deg, #0EA5E9, #38BDF8, #0EA5E9)", accent1: "#E0F2FE", accent2: "#BAE6FD" },
+  garden: { name: "Garden Party", emoji: "🌻", primary: "#16A34A", secondary: "#F59E0B", tertiary: "#EC4899", bg: "#F0FDF4", card: "#FFFFFF", text: "#1A2E1A", muted: "#86A886", border: "#BBF7D0", pattern: "radial-gradient(circle at 10px 10px, #BBF7D044 2px, transparent 2px), radial-gradient(circle at 30px 30px, #FDE68A33 2px, transparent 2px)", patternSize: "40px 40px", headerBg: "linear-gradient(135deg, #16A34A, #4ADE80, #16A34A)", accent1: "#DCFCE7", accent2: "#BBF7D0" },
+  berry: { name: "Berry Blast", emoji: "🫐", primary: "#8B5CF6", secondary: "#EC4899", tertiary: "#F59E0B", bg: "#FAF5FF", card: "#FFFFFF", text: "#2E1065", muted: "#A78BFA", border: "#DDD6FE", pattern: "radial-gradient(circle at 20px 10px, #DDD6FE44 3px, transparent 3px)", patternSize: "35px 35px", headerBg: "linear-gradient(135deg, #8B5CF6, #A78BFA, #8B5CF6)", accent1: "#EDE9FE", accent2: "#DDD6FE" },
+  coral: { name: "Coral Reef", emoji: "🪸", primary: "#F43F5E", secondary: "#FB923C", tertiary: "#0EA5E9", bg: "#FFF1F2", card: "#FFFFFF", text: "#3F0D12", muted: "#FDA4AF", border: "#FECDD3", pattern: "radial-gradient(circle at 15px 15px, #FECDD344 2px, transparent 2px)", patternSize: "30px 30px", headerBg: "linear-gradient(135deg, #F43F5E, #FB7185, #F43F5E)", accent1: "#FFE4E6", accent2: "#FECDD3" },
+  rainbow: { name: "Rainbow", emoji: "🌈", primary: "#E11D48", secondary: "#F59E0B", tertiary: "#0EA5E9", bg: "#FFFBF0", card: "#FFFFFF", text: "#1F1F1F", muted: "#A0A0A0", border: "#FDE68A", pattern: "linear-gradient(135deg, #FEE2E233 25%, #FEF3C733 25%, #FEF3C733 50%, #DCFCE733 50%, #DCFCE733 75%, #E0F2FE33 75%)", patternSize: "60px 60px", headerBg: "linear-gradient(135deg, #E11D48, #F59E0B, #16A34A, #0EA5E9, #8B5CF6)", accent1: "#FFF1F2", accent2: "#FEF3C7" },
+};
+
+const DECORATIONS = {
+  stars: { name: "Stars", icons: ["⭐", "✨", "🌟", "💫"] },
+  hearts: { name: "Hearts", icons: ["💛", "💜", "💚", "🩵"] },
+  nature: { name: "Nature", icons: ["🌸", "🌿", "🦋", "🌼"] },
+  school: { name: "School", icons: ["📚", "✏️", "🎨", "🍎"] },
+  animals: { name: "Animals", icons: ["🐝", "🐞", "🦊", "🐸"] },
+  space: { name: "Space", icons: ["🚀", "⭐", "🌙", "✨"] },
+};
+
+const TEMPLATES = {
+  sub_binder: {
+    name: "Sub Binder Cover", icon: "📋",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "Substitute Teacher Binder", editable: true },
+      { id: "teacher", type: "field", label: "Teacher", value: "Ms. Johnson", icon: "", editable: true },
+      { id: "room", type: "field", label: "Room", value: "Room 204", icon: "", editable: true },
+      { id: "grade", type: "field", label: "Grade", value: "3rd Grade", icon: "", editable: true },
+      { id: "school", type: "field", label: "School", value: "Trailpost Elementary", icon: "", editable: true },
+      { id: "year", type: "field", label: "Year", value: "2025–2026", icon: "", editable: true },
+      { id: "deco1", type: "deco_line", label: "", value: "" },
+      { id: "note", type: "note", label: "Welcome Note", value: "Thank you for being here today! Everything you need is in this binder. The kids are great — enjoy your day with them! 😊", icon: "", editable: true },
+    ],
+  },
+  sub_info: {
+    name: "Sub Info Sheet", icon: "ℹ️",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "Need-to-Know Info", editable: true },
+      { id: "teacher", type: "field", label: "Teacher", value: "Ms. Johnson — Room 204", icon: "👩‍🏫", editable: true },
+      { id: "neighbor", type: "field", label: "Go-To Teacher", value: "Mr. Garcia, Room 206 (he knows everything!)", icon: "🤝", editable: true },
+      { id: "office", type: "field", label: "Office", value: "ext. 100", icon: "📞", editable: true },
+      { id: "nurse", type: "field", label: "Nurse", value: "ext. 108 — Room 12", icon: "🩹", editable: true },
+      { id: "allergies", type: "note", label: "Allergies / Medical", value: "Confidential sheet is in the RED folder on my desk.\nPlease keep it private — do NOT leave it out.", icon: "⚠️", editable: true },
+      { id: "behavior", type: "note", label: "Behavior System", value: "Clip chart on the wall — most kids stay on green all day.\nPositive praise goes a LONG way with this group.\nIf you need support, the office is ext. 100.", icon: "🌈", editable: true },
+      { id: "helpers", type: "note", label: "Reliable Helpers", value: "These students know ALL the routines and will happily help you:\n• (Student 1)\n• (Student 2)\n• (Student 3)", icon: "⭐", editable: true },
+      { id: "dismissal", type: "note", label: "Dismissal", value: "2:45 — Bus riders line up first\n2:50 — Car riders wait for intercom\n2:55 — Walkers leave last", icon: "🚌", editable: true },
+    ],
+  },
+  daily_schedule: {
+    name: "Daily Schedule", icon: "🕐",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "Our Daily Schedule", editable: true },
+      { id: "t1", type: "time_block", label: "Morning Work", value: "8:00 – 8:30", icon: "🌅", editable: true },
+      { id: "t2", type: "time_block", label: "Math", value: "8:30 – 9:30", icon: "🔢", editable: true },
+      { id: "t3", type: "time_block", label: "Specials", value: "9:30 – 10:15 (check door schedule)", icon: "🎨", editable: true },
+      { id: "t4", type: "time_block", label: "Reading / ELA", value: "10:15 – 11:00", icon: "📖", editable: true },
+      { id: "t5", type: "time_block", label: "Writing", value: "11:00 – 11:30", icon: "✏️", editable: true },
+      { id: "t6", type: "time_block", label: "Lunch", value: "11:30 – 12:00 (walk to cafeteria)", icon: "🍎", editable: true },
+      { id: "t7", type: "time_block", label: "Recess", value: "12:00 – 12:30", icon: "⚽", editable: true },
+      { id: "t8", type: "time_block", label: "Science / Social Studies", value: "12:30 – 1:15", icon: "🔬", editable: true },
+      { id: "t9", type: "time_block", label: "Centers / Small Groups", value: "1:15 – 2:00", icon: "🧩", editable: true },
+      { id: "t10", type: "time_block", label: "Read Aloud / Pack Up", value: "2:00 – 2:30", icon: "📚", editable: true },
+      { id: "t11", type: "time_block", label: "Dismissal", value: "2:30 – 2:45", icon: "🚌", editable: true },
+    ],
+  },
+  weekly_planner: {
+    name: "Weekly Planner", icon: "📅",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "This Week's Plan", editable: true },
+      { id: "week", type: "field", label: "Week of", value: "March 17, 2026", icon: "📆", editable: true },
+      { id: "mon", type: "note", label: "Monday", value: "Math: Ch. 7 review\nReading: Begin novel study\nScience: Plant journals", icon: "1️⃣", editable: true },
+      { id: "tue", type: "note", label: "Tuesday", value: "Math: Ch. 7 test\nReading: Novel Ch. 1-2\nArt specials", icon: "2️⃣", editable: true },
+      { id: "wed", type: "note", label: "Wednesday", value: "Math: Begin Ch. 8\nReading: Novel Ch. 3-4\nWriting: Persuasive draft", icon: "3️⃣", editable: true },
+      { id: "thu", type: "note", label: "Thursday", value: "Math: Ch. 8 practice\nReading: Novel Ch. 5-6\nMusic specials", icon: "4️⃣", editable: true },
+      { id: "fri", type: "note", label: "Friday", value: "Math: Ch. 8 quiz\nReading: Wrap-up discussion\nFun Friday STEM challenge! 🎉", icon: "5️⃣", editable: true },
+      { id: "notes", type: "note", label: "Reminders", value: "📸 Picture day Wednesday\n📝 Field trip slips due Thursday\n📊 Report cards go home Friday", icon: "📌", editable: true },
+    ],
+  },
+  emergency_plans: {
+    name: "Emergency Sub Plans", icon: "🚨",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "Emergency Sub Plans", editable: true },
+      { id: "intro", type: "note", label: "Dear Substitute", value: "If you're reading this, I couldn't leave detailed plans — but you've got this! These activities require zero prep and will keep students engaged all day. Thank you so much for stepping in! 💛", icon: "💌", editable: true },
+      { id: "morning", type: "note", label: "Morning", value: "1. Journal: Prompt on board (If you could visit anywhere...)\n2. Read Aloud: Any book from the shelf by the door\n3. Math: Practice packet in the RED folder on desk", icon: "🌅", editable: true },
+      { id: "afternoon", type: "note", label: "Afternoon", value: "1. Silent Reading + Response Journal (20 min)\n2. Activity Pack: 'You Can Do Tomorrow' folder in top drawer — pick any activity!\n3. Read Aloud to end the day", icon: "🌤️", editable: true },
+      { id: "contacts", type: "note", label: "Lifelines", value: "🤝 Next door: Mr. Garcia, Room 206\n📞 Office: ext. 100\n🩹 Nurse: ext. 108\n💪 Behavior support: ext. 115", icon: "📱", editable: true },
+    ],
+  },
+  class_roster: {
+    name: "Class List", icon: "👥",
+    sections: [
+      { id: "title", type: "header", label: "Title", value: "Our Class!", editable: true },
+      { id: "info", type: "field", label: "Teacher / Grade", value: "Ms. Johnson — 3rd Grade — Room 204", icon: "👩‍🏫", editable: true },
+      { id: "roster", type: "roster", label: "Students", value: Array.from({length:25}, (_,i) => `${i+1}. _______________`).join("\n"), icon: "📝", editable: true },
+    ],
+  },
+};
+
+const AddSectionButton = ({ onAdd, theme }) => {
+  const [open, setOpen] = useState(false);
+  const types = [
+    { type: "field", label: "Short Field", icon: "📝" },
+    { type: "note", label: "Text Block", icon: "📄" },
+    { type: "time_block", label: "Time Slot", icon: "🕐" },
+    { type: "deco_line", label: "Decoration", icon: "✨" },
+  ];
+  return (
+    <div style={{ textAlign: "center", margin: "16px 0" }}>
+      {!open ? (
+        <button onClick={() => setOpen(true)} style={{ background: `${theme.primary}15`, border: `2px dashed ${theme.primary}60`, borderRadius: 20, padding: "10px 28px", color: theme.primary, cursor: "pointer", fontSize: 14, fontWeight: 600, fontFamily: "'Quicksand', sans-serif", transition: "all 0.2s" }}>
+          + Add a Section
+        </button>
+      ) : (
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+          {types.map((t) => (
+            <button key={t.type} onClick={() => { onAdd(t.type); setOpen(false); }} style={{ background: theme.accent1, border: `2px solid ${theme.border}`, borderRadius: 16, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontFamily: "'Quicksand', sans-serif", fontWeight: 600, color: theme.text }}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+          <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: theme.muted, fontSize: 16, fontWeight: 700 }}>✕</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function TemplateBuilder() {
+  const [currentTemplate, setCurrentTemplate] = useState("sub_binder");
+  const [themeName, setThemeName] = useState("sunshine");
+  const [decoName, setDecoName] = useState("stars");
+  const [sections, setSections] = useState(JSON.parse(JSON.stringify(TEMPLATES.sub_binder.sections)));
+  const [editingId, setEditingId] = useState(null);
+  const [dragId, setDragId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+
+  const theme = THEMES[themeName];
+  const deco = DECORATIONS[decoName];
+
+  const switchTemplate = (key) => {
+    setCurrentTemplate(key);
+    setSections(JSON.parse(JSON.stringify(TEMPLATES[key].sections)));
+    setEditingId(null);
+  };
+
+  const updateSection = (id, val) => setSections(s => s.map(sec => sec.id === id ? { ...sec, value: val } : sec));
+  const updateLabel = (id, val) => setSections(s => s.map(sec => sec.id === id ? { ...sec, label: val } : sec));
+  const updateIcon = (id, val) => setSections(s => s.map(sec => sec.id === id ? { ...sec, icon: val } : sec));
+  const deleteSection = (id) => { setSections(s => s.filter(sec => sec.id !== id)); if (editingId === id) setEditingId(null); };
+
+  const addSection = (type) => {
+    const newId = `c_${Date.now()}`;
+    const defaults = { field: { label: "New Field", value: "Click to edit", icon: "📝" }, note: { label: "New Section", value: "Click to edit...", icon: "📄" }, time_block: { label: "New Period", value: "0:00 – 0:00", icon: "🕐" }, deco_line: { label: "", value: "", icon: "" } };
+    const d = defaults[type] || defaults.field;
+    setSections(s => [...s, { id: newId, type, ...d, editable: true }]);
+    if (type !== "deco_line") setEditingId(newId);
+  };
+
+  const handleDragStart = (id) => setDragId(id);
+  const handleDragOver = (e, id) => { e.preventDefault(); setDragOverId(id); };
+  const handleDrop = (targetId) => {
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return; }
+    setSections(prev => { const items = [...prev]; const fi = items.findIndex(s => s.id === dragId); const ti = items.findIndex(s => s.id === targetId); const [m] = items.splice(fi, 1); items.splice(ti, 0, m); return items; });
+    setDragId(null); setDragOverId(null);
+  };
+
+  const decoLine = (
+    <div style={{ textAlign: "center", padding: "4px 0", fontSize: 26, letterSpacing: 20, opacity: 0.6 }}>
+      {deco.icons.join("  ")}
+    </div>
+  );
+
+  const renderSection = (sec, idx) => {
+    const isEditing = editingId === sec.id;
+    const isDragOver = dragOverId === sec.id;
+    const isHeader = sec.type === "header";
+    const isDecoLine = sec.type === "deco_line";
+
+    if (isDecoLine) {
+      return (
+        <div key={sec.id} draggable onDragStart={() => handleDragStart(sec.id)} onDragOver={(e) => handleDragOver(e, sec.id)} onDrop={() => handleDrop(sec.id)} onDragEnd={() => { setDragId(null); setDragOverId(null); }}
+          style={{ borderTop: isDragOver ? `3px solid ${theme.primary}` : "3px solid transparent", position: "relative" }}
+          className="section-wrap">
+          {decoLine}
+          <div className="section-controls" style={{ position: "absolute", right: 4, top: 0, opacity: 0, display: "flex", gap: 4, transition: "opacity 0.2s" }}>
+            <span style={{ cursor: "grab", fontSize: 12 }}>⠿</span>
+            <span onClick={() => deleteSection(sec.id)} style={{ cursor: "pointer", fontSize: 12 }}>✕</span>
+          </div>
+          <div className="print-deco">{decoLine}</div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={sec.id} draggable={!isEditing} onDragStart={() => handleDragStart(sec.id)} onDragOver={(e) => handleDragOver(e, sec.id)} onDrop={() => handleDrop(sec.id)} onDragEnd={() => { setDragId(null); setDragOverId(null); }}
+        className="section-wrap"
+        style={{ borderTop: isDragOver ? `3px solid ${theme.primary}` : "3px solid transparent", position: "relative" }}>
+
+        {/* Controls */}
+        <div className="section-controls" style={{ position: "absolute", right: 4, top: isHeader ? 8 : 4, opacity: 0, display: "flex", gap: 4, zIndex: 10, transition: "opacity 0.2s" }}>
+          <span style={{ cursor: "grab", fontSize: 12 }}>⠿</span>
+          {!isHeader && <span onClick={() => deleteSection(sec.id)} style={{ cursor: "pointer", fontSize: 12 }}>✕</span>}
+        </div>
+
+        {isHeader ? (
+          <div onClick={() => setEditingId(sec.id)} style={{ textAlign: "center", padding: "18px 16px 14px", marginBottom: 12, borderRadius: 16, background: theme.headerBg, boxShadow: `0 4px 12px ${theme.primary}30`, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -10, left: -10, fontSize: 40, opacity: 0.15, transform: "rotate(-15deg)" }}>{deco.icons[0]}</div>
+            <div style={{ position: "absolute", bottom: -8, right: -8, fontSize: 36, opacity: 0.15, transform: "rotate(15deg)" }}>{deco.icons[2]}</div>
+            {isEditing ? (
+              <input value={sec.value} onChange={e => updateSection(sec.id, e.target.value)} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === "Enter" && setEditingId(null)} autoFocus
+                style={{ fontSize: 26, fontWeight: 800, color: "white", fontFamily: "'Quicksand', sans-serif", border: "none", borderBottom: "2px dashed rgba(255,255,255,0.5)", background: "transparent", textAlign: "center", width: "100%", outline: "none" }} />
+            ) : (
+              <div style={{ fontSize: 26, fontWeight: 800, color: "white", fontFamily: "'Quicksand', sans-serif", cursor: "text", textShadow: "0 2px 4px rgba(0,0,0,0.15)" }}>{sec.value}</div>
+            )}
+          </div>
+        ) : sec.type === "time_block" ? (
+          <div onClick={() => setEditingId(sec.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", marginBottom: 6, borderRadius: 12, background: idx % 2 === 0 ? theme.accent1 : theme.accent2, border: `2px solid ${theme.border}`, cursor: isEditing ? "default" : "text", transition: "transform 0.1s" }}>
+            <div style={{ fontSize: 22, flexShrink: 0 }}>{sec.icon || "🕐"}</div>
+            <div style={{ flex: 1 }}>
+              {isEditing ? (
+                <>
+                  <input value={sec.label} onChange={e => updateLabel(sec.id, e.target.value)} style={{ fontSize: 14, fontWeight: 700, color: theme.primary, fontFamily: "'Quicksand', sans-serif", border: "none", background: "transparent", outline: "none", width: "100%" }} />
+                  <input value={sec.value} onChange={e => updateSection(sec.id, e.target.value)} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === "Enter" && setEditingId(null)} autoFocus
+                    style={{ fontSize: 13, color: theme.text, fontFamily: "'Quicksand', sans-serif", border: "none", borderBottom: `1px dashed ${theme.muted}`, background: "transparent", outline: "none", width: "100%" }} />
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: theme.primary, fontFamily: "'Quicksand', sans-serif" }}>{sec.label}</div>
+                  <div style={{ fontSize: 13, color: theme.text, fontFamily: "'Quicksand', sans-serif" }}>{sec.value}</div>
+                </>
+              )}
+            </div>
+          </div>
+        ) : sec.type === "roster" ? (
+          <div onClick={() => setEditingId(sec.id)} style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 12, border: `2px solid ${theme.border}`, background: theme.accent1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: theme.primary, fontFamily: "'Quicksand', sans-serif", marginBottom: 6 }}>{sec.icon} {sec.label}</div>
+            {isEditing ? (
+              <textarea value={sec.value} onChange={e => updateSection(sec.id, e.target.value)} onBlur={() => setEditingId(null)} autoFocus rows={Math.min(28, sec.value.split("\n").length + 1)}
+                style={{ fontSize: 13, lineHeight: 1.8, color: theme.text, fontFamily: "'Quicksand', sans-serif", border: `1px dashed ${theme.muted}`, background: "white", width: "100%", outline: "none", padding: 8, borderRadius: 8, resize: "vertical" }} />
+            ) : (
+              <div style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.8, color: theme.text, fontFamily: "'Quicksand', sans-serif", cursor: "text", columns: "2", columnGap: 24 }}>{sec.value}</div>
+            )}
+          </div>
+        ) : (
+          <div onClick={() => setEditingId(sec.id)} style={{ padding: "10px 14px", marginBottom: 8, borderRadius: 12, border: `2px solid ${theme.border}`, background: sec.type === "note" ? theme.accent1 : "transparent", cursor: isEditing ? "default" : "text" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              {sec.icon && <span style={{ fontSize: 16 }}>{sec.icon}</span>}
+              {isEditing ? (
+                <input value={sec.label} onChange={e => updateLabel(sec.id, e.target.value)}
+                  style={{ fontSize: 13, fontWeight: 700, color: theme.primary, fontFamily: "'Quicksand', sans-serif", border: "none", borderBottom: `1px dashed ${theme.primary}`, background: "transparent", outline: "none", flex: 1 }} />
+              ) : (
+                <div style={{ fontSize: 13, fontWeight: 700, color: theme.primary, fontFamily: "'Quicksand', sans-serif" }}>{sec.label}</div>
+              )}
+            </div>
+            {isEditing ? (
+              sec.type === "field" ? (
+                <input value={sec.value} onChange={e => updateSection(sec.id, e.target.value)} onBlur={() => setEditingId(null)} onKeyDown={e => e.key === "Enter" && setEditingId(null)} autoFocus
+                  style={{ fontSize: 15, color: theme.text, fontFamily: "'Quicksand', sans-serif", border: "none", borderBottom: `1px dashed ${theme.muted}`, background: "transparent", width: "100%", outline: "none", padding: "4px 0" }} />
+              ) : (
+                <textarea value={sec.value} onChange={e => updateSection(sec.id, e.target.value)} onBlur={() => setEditingId(null)} autoFocus rows={Math.max(3, sec.value.split("\n").length + 1)}
+                  style={{ fontSize: 13, lineHeight: 1.7, color: theme.text, fontFamily: "'Quicksand', sans-serif", border: `1px dashed ${theme.muted}`, background: "white", width: "100%", outline: "none", padding: 8, borderRadius: 8, resize: "vertical" }} />
+              )
+            ) : (
+              sec.type === "field" ? (
+                <div style={{ fontSize: 15, color: theme.text, fontFamily: "'Quicksand', sans-serif", fontWeight: 500 }}>{sec.value}</div>
+              ) : (
+                <div style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.7, color: theme.text, fontFamily: "'Quicksand', sans-serif" }}>{sec.value}</div>
+              )
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; }
+        @media print {
+          .no-print { display: none !important; }
+          .section-controls { display: none !important; }
+          .print-page { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; max-width: 100% !important; }
+          @page { margin: 0.5in; }
+          body { background: white !important; }
+        }
+        .section-wrap:hover .section-controls { opacity: 1 !important; }
+        button:hover { transform: scale(1.03); }
+        button { transition: transform 0.15s; }
+      `}</style>
+
+      <div style={{ minHeight: "100vh", background: theme.bg, backgroundImage: theme.pattern, backgroundSize: theme.patternSize, fontFamily: "'Quicksand', sans-serif" }}>
+
+        {/* Header Bar */}
+        <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 100, background: "white", borderBottom: `3px solid ${theme.primary}`, padding: "10px 16px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, maxWidth: 900, margin: "0 auto" }}>
+            <div style={{ fontWeight: 800, fontSize: 17, color: theme.primary, marginRight: 4 }}>
+              ✏️ Trailpost Templates
+            </div>
+
+            {/* Template tabs */}
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", flex: 1 }}>
+              {Object.entries(TEMPLATES).map(([key, tmpl]) => (
+                <button key={key} onClick={() => switchTemplate(key)}
+                  style={{ padding: "5px 10px", borderRadius: 20, fontSize: 11, cursor: "pointer", border: currentTemplate === key ? `2px solid ${theme.primary}` : "2px solid #E5E7EB", background: currentTemplate === key ? `${theme.primary}20` : "white", color: currentTemplate === key ? theme.primary : "#666", fontWeight: currentTemplate === key ? 800 : 500, fontFamily: "'Quicksand', sans-serif" }}>
+                  {tmpl.icon} {tmpl.name}
+                </button>
+              ))}
+            </div>
+
+            <button onClick={() => window.print()} style={{ padding: "8px 20px", borderRadius: 24, border: "none", cursor: "pointer", background: theme.headerBg, color: "white", fontWeight: 800, fontSize: 14, fontFamily: "'Quicksand', sans-serif", boxShadow: `0 3px 8px ${theme.primary}40` }}>
+              🖨️ Print!
+            </button>
+          </div>
+
+          {/* Theme + decoration pickers */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "center", marginTop: 8, maxWidth: 900, margin: "8px auto 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#888" }}>Colors:</span>
+              {Object.entries(THEMES).map(([key, t]) => (
+                <button key={key} onClick={() => setThemeName(key)} title={t.name}
+                  style={{ width: 28, height: 28, borderRadius: "50%", cursor: "pointer", background: t.headerBg, border: themeName === key ? "3px solid #333" : "3px solid white", boxShadow: "0 2px 4px rgba(0,0,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>
+                  {themeName === key ? "✓" : ""}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#888" }}>Decorations:</span>
+              {Object.entries(DECORATIONS).map(([key, d]) => (
+                <button key={key} onClick={() => setDecoName(key)} title={d.name}
+                  style={{ padding: "3px 10px", borderRadius: 16, fontSize: 13, cursor: "pointer", border: decoName === key ? `2px solid ${theme.primary}` : "2px solid #E5E7EB", background: decoName === key ? `${theme.primary}15` : "white", fontFamily: "'Quicksand', sans-serif" }}>
+                  {d.icons[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Hint */}
+        <div className="no-print" style={{ textAlign: "center", padding: "10px 16px 2px", color: theme.muted, fontSize: 13, fontWeight: 600 }}>
+          Click any text to edit ✏️ &nbsp; Drag to reorder ↕️ &nbsp; Choose colors & decorations above 🎨
+        </div>
+
+        {/* Page */}
+        <div style={{ maxWidth: 680, margin: "14px auto 0", padding: "0 16px" }}>
+          <div className="print-page" style={{
+            background: "white", borderRadius: 20, boxShadow: `0 6px 30px ${theme.primary}18`, padding: "28px 32px", minHeight: 780,
+            border: `3px solid ${theme.border}`, position: "relative", overflow: "hidden",
+          }}>
+            {/* Corner decorations */}
+            <div style={{ position: "absolute", top: 8, left: 12, fontSize: 28, opacity: 0.12 }}>{deco.icons[0]}</div>
+            <div style={{ position: "absolute", top: 8, right: 12, fontSize: 28, opacity: 0.12 }}>{deco.icons[1]}</div>
+            <div style={{ position: "absolute", bottom: 38, left: 12, fontSize: 28, opacity: 0.12 }}>{deco.icons[2]}</div>
+            <div style={{ position: "absolute", bottom: 38, right: 12, fontSize: 28, opacity: 0.12 }}>{deco.icons[3]}</div>
+
+            {/* Border decoration top */}
+            <div style={{ textAlign: "center", marginBottom: 4, fontSize: 24, letterSpacing: 24, opacity: 0.3 }}>
+              {deco.icons.join("  ")}
+            </div>
+
+            {sections.map((sec, idx) => renderSection(sec, idx))}
+
+            <AddSectionButton onAdd={addSection} theme={theme} />
+
+            {/* Border decoration bottom */}
+            <div style={{ textAlign: "center", marginTop: 8, fontSize: 24, letterSpacing: 24, opacity: 0.3 }}>
+              {deco.icons.join("  ")}
+            </div>
+
+            {/* Footer */}
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `2px dashed ${theme.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: theme.muted, fontFamily: "'Quicksand', sans-serif", fontWeight: 600 }}>
+                made with {deco.icons[0]} by Trailpost — teacherspayteachers.com/store/trailpost
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="no-print" style={{ textAlign: "center", padding: "20px 16px 36px" }}>
+          <div style={{ fontSize: 14, color: theme.muted, fontWeight: 600, marginBottom: 6 }}>
+            Free template builder by <span style={{ color: theme.primary, fontWeight: 800 }}>Trailpost</span> ✨
+          </div>
+          <div style={{ fontSize: 13, color: theme.muted }}>
+            Love this? Check out our no-prep activity packs at the{" "}
+            <a href="https://www.teacherspayteachers.com/store/trailpost" target="_blank" rel="noopener" style={{ color: theme.primary, fontWeight: 800, textDecoration: "none" }}>
+              Trailpost store →
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
